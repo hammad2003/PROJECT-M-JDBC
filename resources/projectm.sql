@@ -4,9 +4,9 @@ SET TRANSACTION READ WRITE;
 SET datestyle = YMD;
 
 -- Esborra taules si existien
-DROP TABLE Juego;
-DROP TABLE Mod;
-DROP TABLE Categoria;
+DROP TABLE IF EXISTS Juego;
+DROP TABLE IF EXISTS Mod;
+DROP TABLE IF EXISTS Categoria;
 
 -- Crear la tabla Juego
 CREATE TABLE Juego (
@@ -29,8 +29,7 @@ CREATE TABLE Mod (
     VersionMinecraft VARCHAR(10),
     RequisitoForge VARCHAR(20),
     Downloads INT,
-    PRIMARY KEY (ModID),
-    FOREIGN KEY (JuegoID) REFERENCES Juegos(JuegoID)
+    FOREIGN KEY (JuegoID) REFERENCES Juego(JuegoID)
 );
 
 -- Crear la tabla Categoria
@@ -38,8 +37,7 @@ CREATE TABLE Categoria (
     CategoriaID SERIAL PRIMARY KEY,
     ModID INT,
     Nombre VARCHAR(255) NOT NULL,
-    PRIMARY KEY (CategoriaID),
-    FOREIGN KEY (ModID) REFERENCES Mods(ModID)
+    FOREIGN KEY (ModID) REFERENCES Mod(ModID)
 );
 
 COMMIT;
