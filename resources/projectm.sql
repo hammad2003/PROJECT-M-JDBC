@@ -32,6 +32,18 @@ CREATE TABLE Mod (
     FOREIGN KEY (JuegoID) REFERENCES Juego(JuegoID)
 );
 
+---- Crear la tabla Mod con detalles en formato JSONB
+--CREATE TABLE Mod (
+--    ModID SERIAL PRIMARY KEY,
+--    JuegoID INT,
+--    Nombre VARCHAR(255) NOT NULL,
+--    Autor VARCHAR(255) NOT NULL,
+--    Descripcion TEXT,
+--    Detalles JSONB,
+--    FOREIGN KEY (JuegoID) REFERENCES Juego(JuegoID)
+--);
+
+
 -- Crear la tabla Categoria
 CREATE TABLE Categoria (
     CategoriaID SERIAL PRIMARY KEY,

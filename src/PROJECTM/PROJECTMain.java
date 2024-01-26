@@ -1,10 +1,16 @@
 package PROJECTM;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.*;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -39,15 +45,15 @@ public class PROJECTMain {
                 case 3:
                     poblarMasivamente(connectionFactory);
                     break;
-                case 4:
-                    seleccionarConTexto(connectionFactory);
-                    break;
-                case 5:
-                    seleccionarConCondicion(connectionFactory);
-                    break;
-                case 6:
-                    modificarRegistro(connectionFactory);
-                    break;
+//                case 4:
+//                    seleccionarConTexto(connectionFactory);
+//                    break;
+//                case 5:
+//                    seleccionarConCondicion(connectionFactory);
+//                    break;
+//                case 6:
+//                    modificarRegistro(connectionFactory);
+//                    break;
             }
 
         } while (opcion != 7);
@@ -62,154 +68,147 @@ public class PROJECTMain {
             System.out.println("Tablas borradas exitosamente.");
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-    }
-
-    private static void crearTablas(ConnectionFactory connectionFactory) {
-        // Aquí deberías incluir las sentencias SQL para crear tus tablas
-        // Utiliza try-with-resources para garantizar el cierre adecuado de los recursos
-        try (Connection connection = connectionFactory.connect();
-             Statement statement = connection.createStatement()) {
-            // Añade aquí las sentencias SQL para crear tus tablas
-            statement.executeUpdate("CREATE TABLE ...");
-            System.out.println("Tablas creadas exitosamente.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void poblarMasivamente(ConnectionFactory connectionFactory) {
-        // Agrega lógica para poblar masivamente desde el CSV aquí.
-
-        // Lee el CSV y obtén los datos (debes ajustar esto según tu estructura CSV).
-        List<String[]> datosCSV = leerCSV("ruta/al/archivo.csv");
-
-        // Conecta a la base de datos.
-        Connection connection = connectionFactory.connect();
-
-        try {
-            // Prepara las sentencias SQL para insertar en las tablas.
-            PreparedStatement insertJuego = connection.prepareStatement("INSERT INTO Juego(Nombre, Descripcion) VALUES (?, ?)");
-            PreparedStatement insertMod = connection.prepareStatement("INSERT INTO Mod(JuegoID, Nombre, Autor, Descripcion, Version, FechaSubida, FechaActualizacion, Tamano, VersionMinecraft, RequisitoForge, Downloads) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            PreparedStatement insertCategoria = connection.prepareStatement("INSERT INTO Categoria(ModID, Nombre) VALUES (?, ?)");
-
-            // Itera sobre los datos del CSV y ejecuta las inserciones.
-            for (String[] fila : datosCSV) {
-                // Puedes ajustar esto según la estructura específica de tu CSV.
-                String nombreJuego = fila[0];
-                String descripcionJuego = fila[1];
-                String nombreMod = fila[2];
-                String autorMod = fila[3];
-                String descripcionMod = fila[4];
-                String detalleMod = fila[5];
-                String categoriaMod = fila[6];
-
-                // Inserta en la tabla Juego.
-                insertJuego.setString(1, nombreJuego);
-                insertJuego.setString(2, descripcionJuego);
-                insertJuego.executeUpdate();
-
-                // Recupera el ID del juego recién insertado.
-                ResultSet juegoResultSet = insertJuego.getGeneratedKeys();
-                juegoResultSet.next();
-                int juegoID = juegoResultSet.getInt(1);
-
-                // Inserta en la tabla Mod.
-                insertMod.setInt(1, juegoID);
-                insertMod.setString(2, nombreMod);
-                insertMod.setString(3, autorMod);
-                insertMod.setString(4, descripcionMod);
-                // ... (continúa con los demás campos)
-                insertMod.executeUpdate();
-
-                // Recupera el ID del mod recién insertado.
-                ResultSet modResultSet = insertMod.getGeneratedKeys();
-                modResultSet.next();
-                int modID = modResultSet.getInt(1);
-
-                // Inserta en la tabla Categoria.
-                insertCategoria.setInt(1, modID);
-                insertCategoria.setString(2, categoriaMod);
-                insertCategoria.executeUpdate();
-            }
-
-            System.out.println("Datos insertados exitosamente desde el CSV.");
-        } catch (SQLException e) {
-            e.printStackTrace();
         } finally {
-            // Cierra las conexiones y los recursos.
             connectionFactory.disconnect();
         }
     }
 
-    private static List<String[]> leerCSV(String rutaArchivo) {
-        // Aquí debes implementar la lógica para leer el CSV.
-        // Puedes usar OpenCSV u otra biblioteca de tu elección.
-        // Devuelve una lista de arrays de cadenas, donde cada array representa una fila del CSV.
-        return null;
+    private static void crearTablas(ConnectionFactory connectionFactory) {
+        try (Connection connection = connectionFactory.connect();
+             Statement statement = connection.createStatement()) {
+
+            // Sentencia SQL para crear la tabla Juego
+            String crearTablaJuego = "CREATE TABLE Juego (" +
+                    "JuegoID SERIAL PRIMARY KEY," +
+                    "Nombre VARCHAR(255) NOT NULL," +
+                    "Descripcion TEXT);";
+
+            // Sentencia SQL para crear la tabla Mod
+            String crearTablaMod = "CREATE TABLE Mod (" +
+                    "ModID SERIAL PRIMARY KEY," +
+                    "JuegoID INT," +
+                    "Nombre VARCHAR(255) NOT NULL," +
+                    "Autor VARCHAR(255) NOT NULL," +
+                    "Descripcion TEXT," +
+                    "Version DECIMAL(5, 2)," +
+                    "FechaSubida DATE," +
+                    "FechaActualizacion DATE," +
+                    "Tamano VARCHAR(20)," +
+                    "VersionMinecraft VARCHAR(10)," +
+                    "RequisitoForge VARCHAR(20)," +
+                    "Downloads INT," +
+                    "FOREIGN KEY (JuegoID) REFERENCES Juego(JuegoID));";
+
+            // Sentencia SQL para crear la tabla Categoria
+            String crearTablaCategoria = "CREATE TABLE Categoria (" +
+                    "CategoriaID SERIAL PRIMARY KEY," +
+                    "ModID INT," +
+                    "Nombre VARCHAR(255) NOT NULL," +
+                    "FOREIGN KEY (ModID) REFERENCES Mod(ModID));";
+
+            // Ejecutar las sentencias SQL
+            statement.executeUpdate(crearTablaJuego);
+            statement.executeUpdate(crearTablaMod);
+            statement.executeUpdate(crearTablaCategoria);
+
+            System.out.println("Tablas creadas exitosamente.");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            connectionFactory.disconnect();
+        }
     }
 
 
-    private static void seleccionarConTexto(ConnectionFactory connectionFactory) {
-        // Lógica para seleccionar elementos que contengan un texto concreto
-        // Puedes utilizar PreparedStatement para evitar problemas de SQL injection
-        try (Connection connection = connectionFactory.connect();
-             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Juego WHERE Descripcion LIKE ?")) {
-            // Setea el parámetro del PreparedStatement con el texto deseado
-            preparedStatement.setString(1, "%texto_a_buscar%");
-            // Ejecuta la consulta
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                // Procesa los resultados
-                while (resultSet.next()) {
-                    System.out.println("Juego ID: " + resultSet.getInt("JuegoID"));
-                    System.out.println("Nombre: " + resultSet.getString("Nombre"));
-                    System.out.println("Descripción: " + resultSet.getString("Descripcion"));
+    public static void poblarMasivamente(ConnectionFactory connectionFactory) {
+        try (Connection connection = connectionFactory.connect()) {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            InputSource inputSource = new InputSource(new FileReader("CurseForge.xml"));  // Usar FileReader para cargar desde un archivo
+            Document document = dBuilder.parse(inputSource);
+
+            document.getDocumentElement().normalize();
+
+            NodeList juegosNodeList = document.getElementsByTagName("Juego");
+
+            for (int temp = 0; temp < juegosNodeList.getLength(); temp++) {
+                Node juegoNode = juegosNodeList.item(temp);
+
+                if (juegoNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element juegoElement = (Element) juegoNode;
+
+                    String nombreJuego = juegoElement.getElementsByTagName("Nombre").item(0).getTextContent();
+                    String descripcionJuego = juegoElement.getElementsByTagName("Descripcion").item(0).getTextContent();
+
+                    // Insertar en la tabla Juego
+                    try (PreparedStatement insertJuego = connection.prepareStatement("INSERT INTO Juego (Nombre, Descripcion) VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+                        insertJuego.setString(1, nombreJuego);
+                        insertJuego.setString(2, descripcionJuego);
+                        insertJuego.executeUpdate();
+
+                        try (ResultSet juegoResultSet = insertJuego.getGeneratedKeys()) {
+                            if (juegoResultSet.next()) {
+                                int juegoID = juegoResultSet.getInt(1);
+
+                                // Insertar mods
+                                NodeList modsNodeList = juegoElement.getElementsByTagName("Mod");
+                                for (int modIndex = 0; modIndex < modsNodeList.getLength(); modIndex++) {
+                                    Node modNode = modsNodeList.item(modIndex);
+
+                                    if (modNode.getNodeType() == Node.ELEMENT_NODE) {
+                                        Element modElement = (Element) modNode;
+
+                                        String nombreMod = modElement.getElementsByTagName("Nombre").item(0).getTextContent();
+                                        String autorMod = modElement.getElementsByTagName("Autor").item(0).getTextContent();
+                                        String descripcionMod = modElement.getElementsByTagName("Descripcion").item(0).getTextContent();
+                                        // Obtener otros campos del Mod según sea necesario
+
+                                        // Insertar en la tabla Mod
+                                        try (PreparedStatement insertMod = connection.prepareStatement("INSERT INTO Mod (JuegoID, Nombre, Autor, Descripcion) VALUES (?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
+                                            insertMod.setInt(1, juegoID);
+                                            insertMod.setString(2, nombreMod);
+                                            insertMod.setString(3, autorMod);
+                                            insertMod.setString(4, descripcionMod);
+                                            // Insertar otros campos del Mod según sea necesario
+                                            insertMod.executeUpdate();
+
+                                            try (ResultSet modResultSet = insertMod.getGeneratedKeys()) {
+                                                if (modResultSet.next()) {
+                                                    int modID = modResultSet.getInt(1);
+
+                                                    // Insertar categorías
+                                                    NodeList categoriasNodeList = modElement.getElementsByTagName("Categoria");
+                                                    for (int categoriaIndex = 0; categoriaIndex < categoriasNodeList.getLength(); categoriaIndex++) {
+                                                        Node categoriaNode = categoriasNodeList.item(categoriaIndex);
+
+                                                        if (categoriaNode.getNodeType() == Node.ELEMENT_NODE) {
+                                                            Element categoriaElement = (Element) categoriaNode;
+                                                            String nombreCategoria = categoriaElement.getElementsByTagName("Nombre").item(0).getTextContent();
+
+                                                            // Insertar en la tabla Categoria
+                                                            try (PreparedStatement insertCategoria = connection.prepareStatement("INSERT INTO Categoria (ModID, Nombre) VALUES (?, ?)")) {
+                                                                insertCategoria.setInt(1, modID);
+                                                                insertCategoria.setString(2, nombreCategoria);
+                                                                insertCategoria.executeUpdate();
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            connectionFactory.disconnect();
         }
     }
 
-    private static void seleccionarConCondicion(ConnectionFactory connectionFactory) {
-        // Lógica para seleccionar elementos que cumplan una condición
-        // Puedes utilizar PreparedStatement para evitar problemas de SQL injection
-        try (Connection connection = connectionFactory.connect();
-             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Juego WHERE alguna_condicion = ?")) {
-            // Setea el parámetro del PreparedStatement con el valor deseado
-            preparedStatement.setString(1, "valor");
-            // Ejecuta la consulta
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                // Procesa los resultados
-                while (resultSet.next()) {
-                    System.out.println("Juego ID: " + resultSet.getInt("JuegoID"));
-                    System.out.println("Nombre: " + resultSet.getString("Nombre"));
-                    System.out.println("Descripción: " + resultSet.getString("Descripcion"));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void modificarRegistro(ConnectionFactory connectionFactory) {
-        // Lógica para modificar un registro concreto
-        // Puedes utilizar PreparedStatement para evitar problemas de SQL injection
-        try (Connection connection = connectionFactory.connect();
-             PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Juego SET Nombre = ?, Descripcion = ? WHERE JuegoID = ?")) {
-            // Setea los parámetros del PreparedStatement con los nuevos valores
-            preparedStatement.setString(1, "NuevoNombre");
-            preparedStatement.setString(2, "NuevaDescripcion");
-            preparedStatement.setInt(1, 123);
-            // Ejecuta la actualización
-            int filasActualizadas = preparedStatement.executeUpdate();
-            if (filasActualizadas > 0) {
-                System.out.println("Registro modificado exitosamente.");
-            } else {
-                System.out.println("No se encontró el registro a modificar.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 }
