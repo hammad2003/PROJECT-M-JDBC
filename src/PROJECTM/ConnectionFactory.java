@@ -7,6 +7,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+/**
+ * La clase ConnectionFactory proporciona métodos para establecer y cerrar conexiones
+ * con una base de datos utilizando JDBC (Java™ Database Connectivity).
+ * Permite configurar la conexión a la base de datos especificando la URL de la base
+ * de datos, el nombre de usuario y la contraseña. También proporciona un método para
+ * desconectar la conexión cuando ya no es necesaria.
+ */
 public class ConnectionFactory {
 	// init database constants
 	private static final String DATABASE_DRIVER = "org.postgresql.Driver";
