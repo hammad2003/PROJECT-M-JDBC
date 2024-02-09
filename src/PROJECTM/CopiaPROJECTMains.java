@@ -339,4 +339,106 @@ public class CopiaPROJECTMains {
 //            return false;
 //        }
 //    }
+
+
+    //    private static void modificarRegistro(ConnectionFactory connectionFactory, String tabla, int idRegistro) {
+//        try (Connection connection = connectionFactory.connect();
+//             Statement statement = connection.createStatement()) {
+//
+//            // Consulta para seleccionar el registro específico
+//            String query = "SELECT * FROM " + tabla + " WHERE " + tabla + "ID = ?";
+//            PreparedStatement preparedStatement = connection.prepareStatement(query);
+//            preparedStatement.setInt(1, idRegistro);
+//            ResultSet resultSet = preparedStatement.executeQuery();
+//
+//            // Verificar si se encontró el registro
+//            if (resultSet.next()) {
+//                // Mostrar la información actual del registro
+//                System.out.println("Información actual del registro:");
+//                for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+//                    System.out.println(resultSet.getMetaData().getColumnName(i) + ": " + resultSet.getString(i));
+//                }
+//
+//                // Pedir al usuario que ingrese los nuevos valores
+//                Scanner scanner = new Scanner(System.in);
+//                System.out.println("\nIngrese los nuevos valores (presione Enter para mantener el valor actual):");
+//                System.out.print("\nTODOS LOS REGISTROS DE LOS ATRIBUTOS ID's NO SE RECOMIENDAN MODIFICAR: \n");
+//                for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+//                    System.out.print(resultSet.getMetaData().getColumnName(i) + ": ");
+//                    String nuevoValor = scanner.nextLine().trim();
+//                    // Si el usuario ingresó un nuevo valor, actualizarlo en la base de datos
+//                    if (!nuevoValor.isEmpty()) {
+//                        String nombreColumna = resultSet.getMetaData().getColumnName(i);
+//                        String updateQuery = "UPDATE " + tabla + " SET " + nombreColumna + " = ? WHERE " + tabla + "ID = ?";
+//                        PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+//                        updateStatement.setString(1, nuevoValor);
+//                        updateStatement.setInt(2, idRegistro);
+//                        updateStatement.executeUpdate();
+//                    }
+//                }
+//                System.out.println("\nRegistro modificado exitosamente.");
+//            } else {
+//                System.out.println("El registro con ID " + idRegistro + " no existe en la tabla " + tabla + ".");
+//            }
+//
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        } finally {
+//            connectionFactory.disconnect();
+//        }
+//    }
+
+
+    //    private static void modificarRegistros(ConnectionFactory connectionFactory, String tabla, String atributo, String valor, String atributoModificar, String nuevoValor) {
+//        try (Connection connection = connectionFactory.connect();
+//             Statement statement = connection.createStatement()) {
+//
+//            // Consulta para seleccionar los registros específicos
+//            String query = "SELECT * FROM " + tabla + " WHERE " + atributo + " = ?";
+//            PreparedStatement preparedStatement = connection.prepareStatement(query);
+//            preparedStatement.setString(1, valor);
+//            ResultSet resultSet = preparedStatement.executeQuery();
+//
+//            // Verificar si se encontraron registros
+//            if (resultSet.next()) {
+//                // Iterar sobre los resultados y modificar los registros
+//                do {
+//                    int idRegistro = resultSet.getInt(1); // Suponiendo que la columna 1 es la clave primaria
+//
+//                    // Actualizar el campo deseado en cada registro
+//                    String updateQuery = "UPDATE " + tabla + " SET " + atributoModificar + " = ? WHERE " + tabla + "ID = ?";
+//                    PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+//                    updateStatement.setString(1, nuevoValor);
+//                    updateStatement.setInt(2, idRegistro);
+//                    updateStatement.executeUpdate();
+//                } while (resultSet.next());
+//
+//                System.out.println("Registros modificados exitosamente.");
+//            } else {
+//                System.out.println("No se encontraron registros que coincidan con los criterios proporcionados.");
+//            }
+//
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        } finally {
+//            connectionFactory.disconnect();
+//        }
+//    }
+//
+//    private static String[] solicitarDetallesModificar() {
+//        Scanner scanner = new Scanner(System.in);
+//        String[] detalles = new String[4];
+//
+//        System.out.println("Introduce el nombre del atributo para seleccionar los registros:");
+//        detalles[0] = scanner.nextLine().trim();
+//        System.out.println("Introduce el valor del atributo para seleccionar los registros:");
+//        detalles[1] = scanner.nextLine().trim();
+//        System.out.println("Introduce el nombre del atributo para modificar:");
+//        detalles[2] = scanner.nextLine().trim();
+//        System.out.println("Introduce el nuevo valor para el atributo:");
+//        detalles[3] = scanner.nextLine().trim();
+//
+//        return detalles;
+//    }
+
 }
