@@ -16,78 +16,7 @@ import java.util.Scanner;
 
 public class PROJECTMain {
 
-    public static void main(String[] args) {
-        // Obtén la instancia de ConnectionFactory
-        ConnectionFactory connectionFactory = ConnectionFactory.getInstance();
-
-        // Menú de opciones
-        Scanner scanner = new Scanner(System.in);
-        int opcion;
-        do {
-            System.out.println("\n" + "1. Borrar tablas de la base de datos y su información");
-            System.out.println("2. Crear tablas de la base de datos");
-            System.out.println("3. Poblar masivamente las tablas desde el XML" + "\n");
-            System.out.println("4. Seleccionar todos los elementos que contengan un texto concreto");
-            System.out.println("5. Seleccionar todos los elementos que cumplan una condición");
-            System.out.println("6. Seleccionar elementos concretos" + "\n");
-            System.out.println("7. Seleccionar un elemento concreto y permitir su modificación");
-            System.out.println("8. Modificar diferentes registros de información" + "\n");
-            System.out.println("9. Eliminar un registro concreto de información");
-            System.out.println("10. Eliminar un conjunto de registros de información que cumplan una condición");
-            System.out.println("11. Salir" + "\n");
-            System.out.print("Seleccione una opción: ");
-
-            opcion = scanner.nextInt();
-
-            switch (opcion) {
-                case 1:
-                    borrarTablas(connectionFactory);
-                    break;
-                case 2:
-                    crearTablas(connectionFactory);
-                    break;
-                case 3:
-                    poblarMasivamente(connectionFactory);
-                    break;
-
-
-                case 4:
-                    seleccionarConTexto(connectionFactory);
-                    break;
-                case 5:
-                    seleccionarElementosPorCondicion(connectionFactory);
-                    break;
-                case 6:
-                    seleccionarElementosConcretos(connectionFactory);
-                    break;
-
-
-                case 7:
-                    modificarRegistro(connectionFactory);
-                    break;
-                case 8:
-                    modificarRegistros(connectionFactory);
-                    break;
-
-
-                case 9:
-                    eliminarRegistro(connectionFactory);
-                    break;
-
-                case 10:
-                    eliminarRegistros(connectionFactory);
-                    break;
-            }
-
-        } while (opcion != 11);
-        scanner.close();
-
-    }
-
-
-
-
-    private static void borrarTablas(ConnectionFactory connectionFactory) {
+    public static void borrarTablas(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
             statement.executeUpdate("DROP TABLE IF EXISTS Juego, Mod, Detalle, Categoria;");
@@ -100,7 +29,7 @@ public class PROJECTMain {
     }
 
 
-    private static void crearTablas(ConnectionFactory connectionFactory) {
+    public static void crearTablas(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
 
@@ -258,39 +187,54 @@ public class PROJECTMain {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            System.out.println("\n" + "Tablas pobladas masivamente con exito."  + "\n");
+            System.out.println("\n" + "Tablas pobladas masivamente con exito." + "\n");
             connectionFactory.disconnect();
         }
     }
 
 
-    private static void seleccionarConTexto(ConnectionFactory connectionFactory) {
+
+    public static void printTablas() {
+        System.out.println("Tablas disponibles:");
+        System.out.println("1. Juego");
+        System.out.println("2. Mod");
+        System.out.println("3. Detalle");
+        System.out.println("4. Categoria");
+    }
+
+
+    public static void seleccionarConTexto(ConnectionFactory connectionFactory) {
         Scanner scanner = new Scanner(System.in);
 
         // Imprimir las tablas disponibles y sus atributos
         printTablas();
 
         // Pedir al usuario que ingrese el número correspondiente a la tabla
-        System.out.println("Ingrese el número correspondiente a la tabla en la que desea eliminar el registro:");
+        System.out.println("Ingrese el número correspondiente a la tabla en la que desea buscar el texto:");
         int opcionTabla = Integer.parseInt(scanner.nextLine().trim());
 
         // Obtener el nombre de la tabla seleccionada y sus atributos
         String tablaSeleccionada;
+        String columnaTexto;
         switch (opcionTabla) {
             case 1:
                 tablaSeleccionada = "Juego";
+                columnaTexto = "Nombre"; // Selecciona la columna donde buscar el texto
                 System.out.println("La tabla Juego tiene los siguientes atributos: JuegoID, Nombre, Descripcion");
                 break;
             case 2:
                 tablaSeleccionada = "Mod";
+                columnaTexto = "Nombre"; // Selecciona la columna donde buscar el texto
                 System.out.println("La tabla Mod tiene los siguientes atributos: ModID, JuegoID, Nombre, Autor, Descripcion");
                 break;
             case 3:
                 tablaSeleccionada = "Detalle";
+                columnaTexto = "Descripcion"; // Selecciona la columna donde buscar el texto
                 System.out.println("La tabla Detalle tiene los siguientes atributos: DetalleID, ModID, Descripcion");
                 break;
             case 4:
                 tablaSeleccionada = "Categoria";
+                columnaTexto = "Nombre"; // Selecciona la columna donde buscar el texto
                 System.out.println("La tabla Categoria tiene los siguientes atributos: CategoriaID, ModID, Nombre");
                 break;
             default:
@@ -307,15 +251,19 @@ public class PROJECTMain {
              Statement statement = connection.createStatement()) {
 
             // Consulta para seleccionar todos los elementos que contengan el texto concreto
-            String query = "SELECT * FROM " + tablaSeleccionada + " WHERE columna LIKE ?";
+            String query = "SELECT * FROM " + tablaSeleccionada + " WHERE " + columnaTexto + " LIKE ?";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, "%" + texto + "%"); // El símbolo % se usa para buscar el texto en cualquier parte del campo
             ResultSet resultSet = preparedStatement.executeQuery();
 
             // Imprimir los resultados obtenidos
-            System.out.println("Resultados de la búsqueda:");
+            System.out.println("Resultados de la búsqueda:" + "\n");
             while (resultSet.next()) {
-                // Aquí puedes obtener y mostrar los datos de cada registro según tu estructura de datos
+                // Imprimir los datos de cada fila
+                for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+                    System.out.println(resultSet.getMetaData().getColumnName(i) + ": " + resultSet.getString(i));
+                }
+                System.out.println(); // Agregar una línea en blanco entre cada registro
             }
 
         } catch (SQLException e) {
@@ -326,7 +274,7 @@ public class PROJECTMain {
     }
 
 
-    private static void seleccionarElementosPorCondicion(ConnectionFactory connectionFactory) {
+    public static void seleccionarElementosPorCondicion(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
 
@@ -371,7 +319,7 @@ public class PROJECTMain {
             ResultSet resultSet = statement.executeQuery(query);
 
             // Mostrar los resultados de la consulta
-            System.out.println("Resultados de la consulta:");
+            System.out.println("Resultados de la consulta:" + "\n");
             while (resultSet.next()) {
                 // Imprimir cada registro encontrado
                 for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
@@ -388,7 +336,7 @@ public class PROJECTMain {
     }
 
 
-    private static void seleccionarElementosConcretos(ConnectionFactory connectionFactory) {
+    public static void seleccionarElementosConcretos(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
 
@@ -435,7 +383,7 @@ public class PROJECTMain {
             ResultSet resultSet = preparedStatement.executeQuery();
 
             // Mostrar los resultados de la consulta
-            System.out.println("Resultado de la consulta:");
+            System.out.println("Resultado de la consulta:" + "\n");
             if (resultSet.next()) {
                 // Imprimir el registro encontrado
                 for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
@@ -453,195 +401,9 @@ public class PROJECTMain {
     }
 
 
-//    private static void seleccionarConTexto(ConnectionFactory connectionFactory) {
-//        Scanner scanner = new Scanner(System.in);
-//
-//        try (Connection connection = connectionFactory.connect()) {
-//            System.out.println("Introduce el nombre de la tabla:");
-//            String tabla = scanner.nextLine().trim();
-//
-//            System.out.println("Introduce el nombre del atributo:");
-//            String atributo = scanner.nextLine().trim();
-//
-//            System.out.println("Introduce el valor:");
-//            String valor = scanner.nextLine().trim();
-//
-//            System.out.println("Selecciona una opción:");
-//            System.out.println("1. Seleccionar todos los elementos que contengan un texto concreto.");
-//            System.out.println("2. Seleccionar todos los elementos que cumplan una condición.");
-//            System.out.println("3. Seleccionar elementos concretos.");
-//            int opcion = scanner.nextInt();
-//
-//            switch (opcion) {
-//                case 1:
-//                    seleccionarElementos(connection, tabla, atributo, valor, true);
-//                    break;
-//                case 2:
-//                    System.out.println("Introduce la condición:");
-//                    scanner.nextLine(); // Consumir la nueva línea
-//                    String condicion = scanner.nextLine().trim();
-//                    seleccionarElementos(connection, tabla, condicion);
-//                    break;
-//                case 3:
-//                    seleccionarElementoConcreto(connection, tabla, atributo, valor);
-//                    break;
-//                default:
-//                    System.out.println("Opción no válida.");
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    private static void seleccionarElementos(Connection connection, String tabla, String atributo, String valor, boolean containsText) throws SQLException {
-//        String query = "SELECT * FROM " + tabla + " WHERE " + atributo + " ";
-//        if (containsText) {
-//            query += "LIKE '%" + valor + "%'";
-//        } else {
-//            query += "= '" + valor + "'";
-//        }
-//
-//        try (Statement statement = connection.createStatement();
-//             ResultSet resultSet = statement.executeQuery(query)) {
-//
-//            while (resultSet.next()) {
-//                // Procesar los resultados
-//            }
-//        }
-//    }
-//
-//    private static void seleccionarElementos(Connection connection, String tabla, String condicion) throws SQLException {
-//        String query = "SELECT * FROM " + tabla + " WHERE " + condicion;
-//
-//        try (Statement statement = connection.createStatement();
-//             ResultSet resultSet = statement.executeQuery(query)) {
-//
-//            while (resultSet.next()) {
-//                // Procesar los resultados
-//            }
-//        }
-//    }
-//
-//    private static void seleccionarElementoConcreto(Connection connection, String tabla, String atributo, String valor) throws SQLException {
-//        String query = "SELECT * FROM " + tabla + " WHERE " + atributo + " = '" + valor + "'";
-//
-//        try (Statement statement = connection.createStatement();
-//             ResultSet resultSet = statement.executeQuery(query)) {
-//
-//            while (resultSet.next()) {
-//                // Procesar los resultados
-//            }
-//        }
-//    }
-
-//    private static void seleccionarConTexto(ConnectionFactory connectionFactory, String tabla, String atributo, String valor, String condicionPersonalizada) {
-//        try (Connection connection = connectionFactory.connect();
-//             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + tabla + " WHERE " + atributo + " LIKE ? " + condicionPersonalizada)) {
-//
-//            preparedStatement.setString(1, "%" + valor + "%");
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            // Iterar sobre el ResultSet e imprimir los resultados
-//            while (resultSet.next()) {
-//                // Imprimir los valores de las columnas
-//                for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-//                    System.out.print(resultSet.getString(i) + "\t");
-//                }
-//                System.out.println(); // Salto de línea después de cada fila
-//            }
-//
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        } finally {
-//            connectionFactory.disconnect();
-//        }
-//    }
 
 
-//    // Método para seleccionar elementos de la tabla Juego
-//    private static void seleccionarConTextoJuego(ConnectionFactory connectionFactory, String atributo, String valor) {
-//        seleccionarConTexto(connectionFactory, "Juego", atributo, valor);
-//    }
-//
-//    // Método para seleccionar elementos de la tabla Mod
-//    private static void seleccionarConTextoMod(ConnectionFactory connectionFactory, String atributo, String valor) {
-//        seleccionarConTexto(connectionFactory, "Mod", atributo, valor);
-//    }
-//
-//    // Método para seleccionar elementos de la tabla Detalle
-//    private static void seleccionarConTextoDetalle(ConnectionFactory connectionFactory, String atributo, String valor) {
-//        seleccionarConTexto(connectionFactory, "Detalle", atributo, valor);
-//    }
-//
-//    // Método para seleccionar elementos de la tabla Categoria
-//    private static void seleccionarConTextoCategoria(ConnectionFactory connectionFactory, String atributo, String valor) {
-//        seleccionarConTexto(connectionFactory, "Categoria", atributo, valor);
-//    }
-//
-//    // Método genérico para seleccionar elementos con texto de cualquier tabla
-//    private static void seleccionarConTexto(ConnectionFactory connectionFactory, String tabla, String atributo, String valor) {
-//        try (Connection connection = connectionFactory.connect();
-//             Statement statement = connection.createStatement()) {
-//
-//            String query = "SELECT * FROM " + tabla + " WHERE " + atributo + " LIKE ?";
-//            PreparedStatement preparedStatement = connection.prepareStatement(query);
-//
-//            // Determinar el tipo de dato del valor y convertirlo apropiadamente
-//            if (isInteger(valor)) {
-//                preparedStatement.setInt(1, Integer.parseInt(valor));
-//            } else if (isDouble(valor)) {
-//                preparedStatement.setDouble(1, Double.parseDouble(valor));
-//            } else {
-//                preparedStatement.setString(1, valor);
-//            }
-//
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//
-//            // Iterar sobre el ResultSet e imprimir los resultados
-//            while (resultSet.next()) {
-//                // Imprimir los valores de las columnas
-//                for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-//                    System.out.print(resultSet.getString(i) + "\t");
-//                }
-//                System.out.println(); // Salto de línea después de cada fila
-//            }
-//
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        } finally {
-//            connectionFactory.disconnect();
-//        }
-//    }
-//
-//    // Método para verificar si un valor es un entero
-//    private static boolean isInteger(String value) {
-//        try {
-//            Integer.parseInt(value);
-//            return true;
-//        } catch (NumberFormatException e) {
-//            return false;
-//        }
-//    }
-//
-//    // Método para verificar si un valor es un número decimal
-//    private static boolean isDouble(String value) {
-//        try {
-//            Double.parseDouble(value);
-//            return true;
-//        } catch (NumberFormatException e) {
-//            return false;
-//        }
-//    }
-
-    private static void printTablas() {
-        System.out.println("Tablas disponibles:");
-        System.out.println("1. Juego");
-        System.out.println("2. Mod");
-        System.out.println("3. Detalle");
-        System.out.println("4. Categoria");
-    }
-
-    private static void modificarRegistro(ConnectionFactory connectionFactory) {
+    public static void modificarRegistro(ConnectionFactory connectionFactory) {
         Scanner scanner = new Scanner(System.in);
 
         // Imprimir las tablas disponibles
@@ -726,7 +488,7 @@ public class PROJECTMain {
     }
 
 
-    private static void modificarRegistros(ConnectionFactory connectionFactory) {
+    public static void modificarRegistros(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
 
@@ -790,9 +552,9 @@ public class PROJECTMain {
             int rowCount = preparedStatement.executeUpdate();
 
             if (rowCount > 0) {
-                System.out.println("Registros modificados exitosamente.");
+                System.out.println("\n" + "Registros modificados exitosamente.");
             } else {
-                System.out.println("No se encontraron registros que coincidan con los criterios proporcionados.");
+                System.out.println("\n" + "No se encontraron registros que coincidan con los criterios proporcionados.");
             }
 
         } catch (SQLException e) {
@@ -805,7 +567,7 @@ public class PROJECTMain {
 
 
 
-    private static void eliminarRegistro(ConnectionFactory connectionFactory) {
+    public static void eliminarRegistro(ConnectionFactory connectionFactory) {
         Scanner scanner = new Scanner(System.in);
 
         // Imprimir las tablas disponibles
@@ -855,9 +617,9 @@ public class PROJECTMain {
 
             // Verificar si se eliminó el registro
             if (rowsAffected > 0) {
-                System.out.println("Registro eliminado exitosamente.");
+                System.out.println("\n" + "Registro eliminado exitosamente.");
             } else {
-                System.out.println("El registro con ID " + idRegistro + " no existe en la tabla " + tabla + ".");
+                System.out.println("\n" + "El registro con ID " + idRegistro + " no existe en la tabla " + tabla + ".");
             }
 
         } catch (SQLException e) {
@@ -868,7 +630,7 @@ public class PROJECTMain {
     }
 
 
-    private static void eliminarRegistros(ConnectionFactory connectionFactory) {
+    public static void eliminarRegistros(ConnectionFactory connectionFactory) {
         Scanner scanner = new Scanner(System.in);
 
         // Imprimir las tablas disponibles y sus atributos
@@ -916,9 +678,9 @@ public class PROJECTMain {
 
             // Verificar si se eliminaron registros
             if (rowsAffected > 0) {
-                System.out.println("Se eliminaron " + rowsAffected + " registros de la tabla " + tablaSeleccionada + ".");
+                System.out.println("\n" + "Se eliminaron " + rowsAffected + " registros de la tabla " + tablaSeleccionada + ".");
             } else {
-                System.out.println("No se encontraron registros que cumplan la condición proporcionada en la tabla " + tablaSeleccionada + ".");
+                System.out.println("\n" + "No se encontraron registros que cumplan la condición proporcionada en la tabla " + tablaSeleccionada + ".");
             }
 
         } catch (SQLException e) {

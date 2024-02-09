@@ -1,105 +1,73 @@
 package PROJECTM;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.FileReader;
-import java.sql.*;
-import java.util.List;
+import java.util.Scanner;
 
 public class PROJECTMenu {
-//    public static void poblarMasivamente(ConnectionFactory connectionFactory) {
-//        try (Connection connection = connectionFactory.connect()) {
-//            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-//            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-//            InputSource inputSource = new InputSource(new FileReader("CurseForge.xml"));  // Usar FileReader para cargar desde un archivo
-//            Document document = dBuilder.parse(inputSource);
-//
-//            document.getDocumentElement().normalize();
-//
-//            NodeList juegosNodeList = document.getElementsByTagName("Juego");
-//
-//            for (int temp = 0; temp < juegosNodeList.getLength(); temp++) {
-//                Node juegoNode = juegosNodeList.item(temp);
-//
-//                if (juegoNode.getNodeType() == Node.ELEMENT_NODE) {
-//                    Element juegoElement = (Element) juegoNode;
-//
-//                    String nombreJuego = juegoElement.getElementsByTagName("Nombre").item(0).getTextContent();
-//                    String descripcionJuego = juegoElement.getElementsByTagName("Descripcion").item(0).getTextContent();
-//
-//                    // Insertar en la tabla Juego
-//                    try (PreparedStatement insertJuego = connection.prepareStatement("INSERT INTO Juego (Nombre, Descripcion) VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-//                        insertJuego.setString(1, nombreJuego);
-//                        insertJuego.setString(2, descripcionJuego);
-//                        insertJuego.executeUpdate();
-//
-//                        try (ResultSet juegoResultSet = insertJuego.getGeneratedKeys()) {
-//                            if (juegoResultSet.next()) {
-//                                int juegoID = juegoResultSet.getInt(1);
-//
-//                                // Insertar mods
-//                                NodeList modsNodeList = juegoElement.getElementsByTagName("Mod");
-//                                for (int modIndex = 0; modIndex < modsNodeList.getLength(); modIndex++) {
-//                                    Node modNode = modsNodeList.item(modIndex);
-//
-//                                    if (modNode.getNodeType() == Node.ELEMENT_NODE) {
-//                                        Element modElement = (Element) modNode;
-//
-//                                        String nombreMod = modElement.getElementsByTagName("Nombre").item(0).getTextContent();
-//                                        String autorMod = modElement.getElementsByTagName("Autor").item(0).getTextContent();
-//                                        String descripcionMod = modElement.getElementsByTagName("Descripcion").item(0).getTextContent();
-//                                        // Obtener otros campos del Mod según sea necesario
-//
-//                                        // Insertar en la tabla Mod
-//                                        try (PreparedStatement insertMod = connection.prepareStatement("INSERT INTO Mod (JuegoID, Nombre, Autor, Descripcion) VALUES (?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
-//                                            insertMod.setInt(1, juegoID);
-//                                            insertMod.setString(2, nombreMod);
-//                                            insertMod.setString(3, autorMod);
-//                                            insertMod.setString(4, descripcionMod);
-//                                            // Insertar otros campos del Mod según sea necesario
-//                                            insertMod.executeUpdate();
-//
-//                                            try (ResultSet modResultSet = insertMod.getGeneratedKeys()) {
-//                                                if (modResultSet.next()) {
-//                                                    int modID = modResultSet.getInt(1);
-//
-//                                                    // Insertar categorías
-//                                                    NodeList categoriasNodeList = modElement.getElementsByTagName("Categoria");
-//                                                    for (int categoriaIndex = 0; categoriaIndex < categoriasNodeList.getLength(); categoriaIndex++) {
-//                                                        Node categoriaNode = categoriasNodeList.item(categoriaIndex);
-//
-//                                                        if (categoriaNode.getNodeType() == Node.ELEMENT_NODE) {
-//                                                            Element categoriaElement = (Element) categoriaNode;
-//                                                            String nombreCategoria = categoriaElement.getElementsByTagName("Nombre").item(0).getTextContent();
-//
-//                                                            // Insertar en la tabla Categoria
-//                                                            try (PreparedStatement insertCategoria = connection.prepareStatement("INSERT INTO Categoria (ModID, Nombre) VALUES (?, ?)")) {
-//                                                                insertCategoria.setInt(1, modID);
-//                                                                insertCategoria.setString(2, nombreCategoria);
-//                                                                insertCategoria.executeUpdate();
-//                                                            }
-//                                                        }
-//                                                    }
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            connectionFactory.disconnect();
-//        }
-//    }
+    public static void main(String[] args) {
+        // Obtén la instancia de ConnectionFactory
+        ConnectionFactory connectionFactory = ConnectionFactory.getInstance();
+
+        // Menú de opciones
+        Scanner scanner = new Scanner(System.in);
+        int opcion;
+        do {
+            System.out.println("\n" + "1. Borrar tablas de la base de datos y su información");
+            System.out.println("2. Crear tablas de la base de datos");
+            System.out.println("3. Poblar masivamente las tablas desde el XML" + "\n");
+            System.out.println("4. Seleccionar todos los elementos que contengan un texto concreto");
+            System.out.println("5. Seleccionar todos los elementos que cumplan una condición");
+            System.out.println("6. Seleccionar elementos concretos" + "\n");
+            System.out.println("7. Seleccionar un elemento concreto y permitir su modificación");
+            System.out.println("8. Modificar diferentes registros de información" + "\n");
+            System.out.println("9. Eliminar un registro concreto de información");
+            System.out.println("10. Eliminar un conjunto de registros de información que cumplan una condición");
+            System.out.println("11. Salir" + "\n");
+            System.out.print("Seleccione una opción: ");
+
+            opcion = scanner.nextInt();
+
+            switch (opcion) {
+                case 1:
+                    PROJECTMain.borrarTablas(connectionFactory);
+                    break;
+                case 2:
+                    PROJECTMain.crearTablas(connectionFactory);
+                    break;
+                case 3:
+                    PROJECTMain.poblarMasivamente(connectionFactory);
+                    break;
+
+
+                case 4:
+                    PROJECTMain.seleccionarConTexto(connectionFactory);
+                    break;
+                case 5:
+                    PROJECTMain.seleccionarElementosPorCondicion(connectionFactory);
+                    break;
+                case 6:
+                    PROJECTMain.seleccionarElementosConcretos(connectionFactory);
+                    break;
+
+
+                case 7:
+                    PROJECTMain.modificarRegistro(connectionFactory);
+                    break;
+                case 8:
+                    PROJECTMain.modificarRegistros(connectionFactory);
+                    break;
+
+
+                case 9:
+                    PROJECTMain.eliminarRegistro(connectionFactory);
+                    break;
+
+                case 10:
+                    PROJECTMain.eliminarRegistros(connectionFactory);
+                    break;
+            }
+
+        } while (opcion != 11);
+        scanner.close();
+
+    }
 }
