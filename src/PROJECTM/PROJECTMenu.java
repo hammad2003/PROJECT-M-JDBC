@@ -2,7 +2,16 @@ package PROJECTM;
 
 import java.util.Scanner;
 
+
+/**
+ * Clase principal que contiene el menú de opciones para interactuar con la base de datos.
+ */
 public class PROJECTMenu {
+    /**
+     * Método principal que muestra el menú de opciones y gestiona la interacción del usuario.
+     *
+     * @param args Argumentos de línea de comandos (no utilizado en este caso).
+     */
     public static void main(String[] args) {
         // Obtén la instancia de ConnectionFactory
         ConnectionFactory connectionFactory = ConnectionFactory.getInstance();
@@ -36,8 +45,6 @@ public class PROJECTMenu {
                 case 3:
                     PROJECTMain.poblarMasivamente(connectionFactory);
                     break;
-
-
                 case 4:
                     PROJECTMain.seleccionarConTexto(connectionFactory);
                     break;
@@ -47,16 +54,12 @@ public class PROJECTMenu {
                 case 6:
                     PROJECTMain.seleccionarElementosConcretos(connectionFactory);
                     break;
-
-
                 case 7:
                     PROJECTMain.modificarRegistro(connectionFactory);
                     break;
                 case 8:
                     PROJECTMain.modificarRegistros(connectionFactory);
                     break;
-
-
                 case 9:
                     PROJECTMain.eliminarRegistro(connectionFactory);
                     break;

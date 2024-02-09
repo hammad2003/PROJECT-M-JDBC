@@ -10,25 +10,58 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Clase principal que contiene los métodos para interactuar con la base de datos.
+ */
 public class PROJECTMain {
 
+    /**
+     * Borra todas las tablas de la base de datos si existen.
+     * Este método elimina de manera permanente todas las tablas Juego, Mod, Detalle y Categoria de la base de datos si están presentes.
+     * Antes de ejecutar la eliminación, se verifica si cada tabla existe para evitar errores.
+     *
+     * @param connectionFactory una instancia de ConnectionFactory para establecer la conexión con la base de datos.
+     *                          Debe proporcionarse una conexión válida para que este método funcione correctamente.
+     *                          Una vez completada la operación, la conexión se cerrará automáticamente.
+     * @throws SQLException si ocurre algún error al intentar eliminar las tablas.
+     *                      Esto puede incluir problemas de conexión, consultas SQL inválidas o permisos insuficientes para realizar la operación.
+     *                      Si se produce una excepción SQLException, se imprimirá el seguimiento de la pila para ayudar en la depuración.
+     *                      La conexión con la base de datos se cerrará adecuadamente después de capturar la excepción.
+     */
     public static void borrarTablas(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
+            // Ejecutar la instrucción SQL para borrar las tablas
             statement.executeUpdate("DROP TABLE IF EXISTS Juego, Mod, Detalle, Categoria;");
+            // Imprimir un mensaje de éxito después de borrar las tablas
             System.out.println("\n" + "Tablas borradas exitosamente." + "\n");
         } catch (SQLException e) {
+            // Si se produce una excepción SQLException, se imprimirá el seguimiento de la pila
             e.printStackTrace();
+            // La conexión se cierra automáticamente después de manejar la excepción
         } finally {
+            // La conexión se desconecta independientemente del resultado de la operación
             connectionFactory.disconnect();
         }
     }
 
 
+    /**
+     * Crea las tablas necesarias en la base de datos.
+     * Este método ejecuta sentencias SQL para crear las tablas Juego, Mod, Detalle y Categoria en la base de datos.
+     * Cada tabla tiene sus propias columnas definidas, incluyendo claves primarias y claves externas según sea necesario.
+     * Las claves externas se utilizan para establecer relaciones entre las tablas.
+     *
+     * @param connectionFactory una instancia de ConnectionFactory para establecer la conexión con la base de datos.
+     *                          Debe proporcionarse una conexión válida para que este método funcione correctamente.
+     *                          Una vez completada la operación, la conexión se cerrará automáticamente.
+     * @throws SQLException si ocurre algún error al intentar crear las tablas.
+     *                      Esto puede incluir problemas de conexión, sentencias SQL inválidas o permisos insuficientes para realizar la operación.
+     *                      Si se produce una excepción SQLException, se imprimirá el seguimiento de la pila para ayudar en la depuración.
+     *                      La conexión con la base de datos se cerrará adecuadamente después de capturar la excepción.
+     */
     public static void crearTablas(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
@@ -70,18 +103,34 @@ public class PROJECTMain {
             statement.executeUpdate(crearTablaDetalle);
             statement.executeUpdate(crearTablaCategoria);
 
+            // Imprimir un mensaje de éxito después de crear las tablas
             System.out.println("\n" + "Tablas creadas exitosamente." + "\n");
 
         } catch (SQLException e) {
+            // Si se produce una excepción SQLException, se imprimirá el seguimiento de la pila
             e.printStackTrace();
+            // La conexión se cierra automáticamente después de manejar la excepción
         } finally {
+            // La conexión se desconecta independientemente del resultado de la operación
             connectionFactory.disconnect();
         }
     }
 
 
+    /**
+            * Puebla las tablas de la base de datos con datos masivos desde un archivo XML.
+     *
+             * @param connectionFactory una instancia de ConnectionFactory para establecer la conexión con la base de datos.
+            *                          Debe proporcionarse una conexión válida para que este método funcione correctamente.
+     *                          Una vez completada la operación, la conexión se cerrará automáticamente.
+     * @throws SQLException si ocurre algún error al intentar poblar las tablas con los datos del archivo XML.
+            *                      Esto puede incluir problemas de conexión, sentencias SQL inválidas o permisos insuficientes para realizar la operación.
+     *                      Si se produce una excepción SQLException, se imprimirá el seguimiento de la pila para ayudar en la depuración.
+     *                      La conexión con la base de datos se cerrará adecuadamente después de capturar la excepción.
+     */
     public static void poblarMasivamente(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect()) {
+            // Cargar el archivo XML y obtener el documento
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             InputSource inputSource = new InputSource(new FileReader("CurseForge.xml"));
@@ -91,24 +140,29 @@ public class PROJECTMain {
 
             NodeList juegosNodeList = document.getElementsByTagName("Juego");
 
+            // Obtener la lista de nodos 'Juego' del documento XML
             for (int temp = 0; temp < juegosNodeList.getLength(); temp++) {
                 Node juegoNode = juegosNodeList.item(temp);
 
                 if (juegoNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element juegoElement = (Element) juegoNode;
 
+                    // Obtener el nombre y la descripción del juego
                     String nombreJuego = juegoElement.getElementsByTagName("Nombre").item(0).getTextContent();
                     String descripcionJuego = juegoElement.getElementsByTagName("Descripcion").item(0).getTextContent();
 
+                    // Insertar el juego en la tabla 'Juego'
                     try (PreparedStatement insertJuego = connection.prepareStatement("INSERT INTO Juego (Nombre, Descripcion) VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
                         insertJuego.setString(1, nombreJuego);
                         insertJuego.setString(2, descripcionJuego);
                         insertJuego.executeUpdate();
 
+                        // Obtener el ID del juego insertado
                         try (ResultSet juegoResultSet = insertJuego.getGeneratedKeys()) {
                             if (juegoResultSet.next()) {
                                 int juegoID = juegoResultSet.getInt(1);
 
+                                // Obtener la lista de nodos 'Mod' del juego actual
                                 NodeList modsNodeList = juegoElement.getElementsByTagName("Mod");
                                 for (int modIndex = 0; modIndex < modsNodeList.getLength(); modIndex++) {
                                     Node modNode = modsNodeList.item(modIndex);
@@ -116,11 +170,12 @@ public class PROJECTMain {
                                     if (modNode.getNodeType() == Node.ELEMENT_NODE) {
                                         Element modElement = (Element) modNode;
 
+                                        // Obtener los detalles del mod
                                         String nombreMod = modElement.getElementsByTagName("Nombre").item(0).getTextContent();
                                         String autorMod = modElement.getElementsByTagName("Autor").item(0).getTextContent();
                                         String descripcionMod = modElement.getElementsByTagName("Descripcion").item(0).getTextContent();
 
-                                        // Insertar en la tabla Mod
+                                        // Insertar el mod en la tabla 'Mod'
                                         try (PreparedStatement insertMod = connection.prepareStatement("INSERT INTO Mod (JuegoID, Nombre, Autor, Descripcion) VALUES (?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
                                             insertMod.setInt(1, juegoID);
                                             insertMod.setString(2, nombreMod);
@@ -128,11 +183,12 @@ public class PROJECTMain {
                                             insertMod.setString(4, descripcionMod);
                                             insertMod.executeUpdate();
 
+                                            // Obtener el ID del mod insertado
                                             try (ResultSet modResultSet = insertMod.getGeneratedKeys()) {
                                                 if (modResultSet.next()) {
                                                     int modID = modResultSet.getInt(1);
 
-                                                    // Insertar en la tabla Detalle (si hay detalles)
+                                                    // Insertar detalles del mod en la tabla 'Detalle'
                                                     NodeList detallesNodeList = modElement.getElementsByTagName("Detalles");
                                                     if (detallesNodeList.getLength() > 0) {
                                                         Node detallesNode = detallesNodeList.item(0);
@@ -146,7 +202,7 @@ public class PROJECTMain {
                                                                     Element detalleElement = (Element) detalleNode;
                                                                     String descripcionDetalle = detalleElement.getElementsByTagName("Descripcion").item(0).getTextContent();
 
-                                                                    // Insertar en la tabla Detalle
+                                                                    // Insertar el detalle en la tabla 'Detalle'
                                                                     try (PreparedStatement insertDetalle = connection.prepareStatement("INSERT INTO Detalle (ModID, Descripcion) VALUES (?, ?)")) {
                                                                         insertDetalle.setInt(1, modID);
                                                                         insertDetalle.setString(2, descripcionDetalle);
@@ -157,7 +213,7 @@ public class PROJECTMain {
                                                         }
                                                     }
 
-                                                    // Insertar categorías (si las hay)
+                                                    // Insertar categorías del mod en la tabla 'Categoria'
                                                     NodeList categoriasNodeList = modElement.getElementsByTagName("Categoria");
                                                     for (int categoriaIndex = 0; categoriaIndex < categoriasNodeList.getLength(); categoriaIndex++) {
                                                         Node categoriaNode = categoriasNodeList.item(categoriaIndex);
@@ -166,7 +222,7 @@ public class PROJECTMain {
                                                             Element categoriaElement = (Element) categoriaNode;
                                                             String nombreCategoria = categoriaElement.getElementsByTagName("Nombre").item(0).getTextContent();
 
-                                                            // Insertar en la tabla Categoria
+                                                            // Insertar la categoría en la tabla 'Categoria'
                                                             try (PreparedStatement insertCategoria = connection.prepareStatement("INSERT INTO Categoria (ModID, Nombre) VALUES (?, ?)")) {
                                                                 insertCategoria.setInt(1, modID);
                                                                 insertCategoria.setString(2, nombreCategoria);
@@ -184,16 +240,24 @@ public class PROJECTMain {
                     }
                 }
             }
+            // Imprimir un mensaje de éxito después de poblar las tablas con datos masivos
+            System.out.println("\n" + "Tablas pobladas masivamente con exito." + "\n");
+
         } catch (Exception e) {
+            // Si se produce una excepción, se imprimirá el seguimiento de la pila para ayudar en la depuración
             e.printStackTrace();
         } finally {
-            System.out.println("\n" + "Tablas pobladas masivamente con exito." + "\n");
+            // La conexión se desconecta independientemente del resultado de la operación
             connectionFactory.disconnect();
         }
     }
 
 
 
+    /**
+     * Imprime en la consola las tablas disponibles en la base de datos.
+     * Este método muestra las opciones de tablas disponibles para que el usuario pueda seleccionarlas.
+     */
     public static void printTablas() {
         System.out.println("Tablas disponibles:");
         System.out.println("1. Juego");
@@ -203,6 +267,13 @@ public class PROJECTMain {
     }
 
 
+
+    /**
+     * Selecciona todos los elementos de una tabla que contengan un texto concreto en una columna específica.
+     * Imprime los resultados de la búsqueda en la consola.
+     *
+     * @param connectionFactory Objeto ConnectionFactory para establecer la conexión con la base de datos.
+     */
     public static void seleccionarConTexto(ConnectionFactory connectionFactory) {
         Scanner scanner = new Scanner(System.in);
 
@@ -274,6 +345,12 @@ public class PROJECTMain {
     }
 
 
+    /**
+     * Selecciona todos los elementos de una tabla que cumplan una condición especificada por el usuario.
+     * Imprime los resultados de la consulta en la consola.
+     *
+     * @param connectionFactory Objeto ConnectionFactory para establecer la conexión con la base de datos.
+     */
     public static void seleccionarElementosPorCondicion(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
@@ -336,6 +413,12 @@ public class PROJECTMain {
     }
 
 
+    /**
+     * Selecciona un elemento específico de una tabla basado en el ID proporcionado por el usuario.
+     * Imprime el resultado de la consulta en la consola.
+     *
+     * @param connectionFactory Objeto ConnectionFactory para establecer la conexión con la base de datos.
+     */
     public static void seleccionarElementosConcretos(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
@@ -403,6 +486,13 @@ public class PROJECTMain {
 
 
 
+    /**
+     * Modifica un registro en una tabla específica de la base de datos.
+     * Imprime la información actual del registro y solicita al usuario que ingrese los nuevos valores.
+     * Si se proporcionan nuevos valores, actualiza el registro en la base de datos.
+     *
+     * @param connectionFactory Objeto ConnectionFactory para establecer la conexión con la base de datos.
+     */
     public static void modificarRegistro(ConnectionFactory connectionFactory) {
         Scanner scanner = new Scanner(System.in);
 
@@ -488,6 +578,14 @@ public class PROJECTMain {
     }
 
 
+    /**
+     * Modifica registros en una tabla específica de la base de datos.
+     * Imprime los atributos de la tabla seleccionada y solicita al usuario que ingrese el atributo que desea modificar,
+     * el nuevo valor para el atributo y el valor actual del atributo para filtrar los registros.
+     * Luego, actualiza los registros que coincidan con los criterios proporcionados.
+     *
+     * @param connectionFactory Objeto ConnectionFactory para establecer la conexión con la base de datos.
+     */
     public static void modificarRegistros(ConnectionFactory connectionFactory) {
         try (Connection connection = connectionFactory.connect();
              Statement statement = connection.createStatement()) {
@@ -567,6 +665,14 @@ public class PROJECTMain {
 
 
 
+    /**
+     * Elimina un registro específico de una tabla seleccionada en la base de datos.
+     * Imprime las tablas disponibles y solicita al usuario que ingrese el número correspondiente a la tabla.
+     * Luego, muestra los atributos de la tabla seleccionada y solicita al usuario que ingrese el ID del registro a eliminar.
+     * Finalmente, ejecuta la eliminación del registro según el ID ingresado.
+     *
+     * @param connectionFactory Objeto ConnectionFactory para establecer la conexión con la base de datos.
+     */
     public static void eliminarRegistro(ConnectionFactory connectionFactory) {
         Scanner scanner = new Scanner(System.in);
 
@@ -630,6 +736,14 @@ public class PROJECTMain {
     }
 
 
+    /**
+     * Elimina registros de una tabla seleccionada en la base de datos que cumplan una condición específica.
+     * Imprime las tablas disponibles y solicita al usuario que ingrese el número correspondiente a la tabla.
+     * Luego, muestra los atributos de la tabla seleccionada y solicita al usuario que ingrese una condición para eliminar los registros.
+     * Finalmente, ejecuta la eliminación de los registros según la tabla y la condición ingresadas.
+     *
+     * @param connectionFactory Objeto ConnectionFactory para establecer la conexión con la base de datos.
+     */
     public static void eliminarRegistros(ConnectionFactory connectionFactory) {
         Scanner scanner = new Scanner(System.in);
 
@@ -689,6 +803,5 @@ public class PROJECTMain {
             connectionFactory.disconnect();
         }
     }
-
 
 }
